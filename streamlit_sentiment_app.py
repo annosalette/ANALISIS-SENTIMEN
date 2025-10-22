@@ -176,11 +176,11 @@ def hybrid_sentiment(text):
 def main():
     st.set_page_config(page_title="Analisis Sentimen (Hybrid Naive Bayes)", layout="wide")
     st.title("📊 ANALISIS SENTIMEN PENGGUNA MOBILE LEGENDS DI TWITTER")
-    st.markdown("Upload dataset mentah (Excel/CSV). Aplikasi akan otomatis melakukan preprocessing, pelabelan hybrid (lexicon + TextBlob), melatih Naïve Bayes (TF-IDF) untuk evaluasi, lalu menampilkan visualisasi dan hasil yang dapat diunduh.")
+    st.markdown("Upload dataset mentah (Excel/CSV).")
 
     uploaded = st.file_uploader("Unggah file (.xlsx atau .csv)", type=["xlsx", "csv"])
     if uploaded is None:
-        st.info("Silakan unggah file Excel (.xlsx) atau CSV hasil crawling (mengandung kolom teks seperti 'full_text' / 'text').")
+        st.info("Silakan unggah file Excel (.xlsx) atau CSV ")
         return
 
     # read file
@@ -313,20 +313,6 @@ def main():
         ax_wc.imshow(wc, interpolation="bilinear")
         ax_wc.axis("off")
         st.pyplot(fig_wc)
-
-    # Download labeled results (xlsx and csv)
-    st.subheader("💾 Unduh Hasil Pelabelan")
-    try:
-        towrite = BytesIO()
-        # prefer xlsx
-        with pd.ExcelWriter(towrite, engine="openpyxl") as writer:
-            df_raw.to_excel(writer, index=False, sheet_name="labelled")
-        towrite.seek(0)
-        st.download_button(label="Download (Excel .xlsx)", data=towrite, file_name="hasil_pelabelan.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-    except Exception:
-        # fallback csv
-        st.download_button(label="Download (CSV)", data=df_raw.to_csv(index=False).encode("utf-8"), file_name="hasil_pelabelan.csv", mime="text/csv")
-
     # also provide preview of top 20 labeled rows
     st.subheader("🔎 Contoh Hasil Pelabelan (20 baris pertama)")
     st.dataframe(df_raw[["stemmed_text", "sentiment_label", "confidence_score"]].head(20))
