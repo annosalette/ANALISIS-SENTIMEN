@@ -1,5 +1,5 @@
 # ===========================================
-# streamlit_sentiment_app.py (HD COMPACT VISUAL)
+# streamlit_sentiment_app.py (HD Compact Visual + Multiwarna)
 # ===========================================
 import streamlit as st
 import pandas as pd
@@ -15,6 +15,7 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import accuracy_score, f1_score, confusion_matrix
 from collections import Counter
+import random
 
 # -------------------------
 # Preprocessing Text
@@ -98,7 +99,7 @@ def hybrid_sentiment(text):
     return {"label": final_label, "score": round(conf, 3)}
 
 # -------------------------
-# Streamlit Main
+# Streamlit Main App
 # -------------------------
 def main():
     st.title("📊 Analisis Sentimen Pengguna Mobile Legends")
@@ -117,7 +118,6 @@ def main():
 
     df.columns = df.columns.str.strip().str.lower()
     text_col = next((c for c in ["stemmed_text", "clean_text", "text", "komentar", "tweet"] if c in df.columns), None)
-
     if text_col is None:
         st.error("Kolom teks tidak ditemukan. Pastikan ada kolom seperti 'stemmed_text' atau 'text'.")
         return
@@ -125,7 +125,7 @@ def main():
     st.success(f"Dataset berhasil dimuat ✅ — Total {len(df)} data")
     st.dataframe(df[[text_col]].head(5))
 
-    # Labeling
+    # Labeling otomatis
     st.info("Melabeli data... mohon tunggu sebentar.")
     df["stemmed_text"] = df[text_col].astype(str).apply(preprocess_text)
     result = df["stemmed_text"].apply(hybrid_sentiment)
@@ -142,12 +142,12 @@ def main():
         st.write("Jumlah Data per Sentimen:")
         st.dataframe(counts.rename_axis("Label").reset_index().rename(columns={0: "Jumlah"}))
     with col2:
-        fig, ax = plt.subplots(figsize=(3.5, 3.5), dpi=150)
+        fig, ax = plt.subplots(figsize=(3, 3), dpi=180)
         ax.pie(counts, labels=counts.index, autopct="%1.1f%%", startangle=90,
-               colors=["#2ecc71", "#5dade2", "#e74c3c"], textprops={"fontsize": 9})
+               colors=["#2ecc71", "#5dade2", "#e74c3c"], textprops={"fontsize": 8})
         st.pyplot(fig, use_container_width=True)
 
-    # Train/Test Naive Bayes
+    # Model Naïve Bayes
     X = df["stemmed_text"]
     y = df["sentiment_label"]
     if len(y.unique()) > 1:
@@ -163,42 +163,50 @@ def main():
         f1 = f1_score(y_test, y_pred, average="weighted")
 
         st.subheader("📊 Evaluasi Model Naïve Bayes")
-        st.write(f"**Akurasi:** {acc:.4f}")
-        st.write(f"**F1-Score (weighted):** {f1:.4f}")
+        st.write(f"**Akurasi Model :** {acc:.4f}")
+        st.write(f"**F1-Score :** {f1:.4f}")
 
-        # 🔹 Confusion Matrix (compact HD)
+        # Confusion Matrix (compact + responsif)
         cm = confusion_matrix(y_test, y_pred, labels=order)
-        fig_cm, ax_cm = plt.subplots(figsize=(4, 3), dpi=160)
+        fig_cm, ax_cm = plt.subplots(figsize=(2.6, 2.0), dpi=180)
         sns.heatmap(cm, annot=True, fmt="d", cmap="YlGnBu",
-                    xticklabels=order, yticklabels=order, cbar=False, annot_kws={"size": 10})
-        ax_cm.set_xlabel("Prediksi", fontsize=10)
-        ax_cm.set_ylabel("Aktual", fontsize=10)
-        ax_cm.set_title("Confusion Matrix", fontsize=11, pad=10)
+                    xticklabels=order, yticklabels=order, cbar=False, annot_kws={"size": 8})
+        ax_cm.set_xlabel("Prediksi", fontsize=8)
+        ax_cm.set_ylabel("Aktual", fontsize=8)
+        ax_cm.set_title("Confusion Matrix", fontsize=9, pad=6)
         plt.tight_layout()
         st.pyplot(fig_cm, use_container_width=True)
 
-    # 🔹 WordCloud compact + variasi warna
-    st.subheader("☁️ WordCloud Sentimen (Berwarna)")
-    color_maps = {
-        "positif": "Greens_r",
-        "netral": "Blues_r",
-        "negatif": "Reds_r"
-    }
+    # WordCloud Multiwarna
+    st.subheader("☁️ WordCloud Sentimen (Multiwarna & Responsif)")
+
+    def random_color_func(word=None, font_size=None, position=None, orientation=None, font_path=None, random_state=None):
+        """Fungsi pewarnaan acak agar tiap kata punya warna berbeda"""
+        h = int(360.0 * random.random())
+        s = int(60 + 40 * random.random())
+        l = int(40 + 10 * random.random())
+        return f"hsl({h}, {s}%, {l}%)"
 
     for lbl in order:
         text_data = " ".join(df[df["sentiment_label"] == lbl]["stemmed_text"])
         if not text_data.strip():
             continue
-        wc = WordCloud(width=600, height=350, background_color="white", colormap=color_maps[lbl],
-                       max_words=150, collocations=False).generate(text_data)
+        wc = WordCloud(
+            width=480, height=260,
+            background_color="white",
+            color_func=random_color_func,
+            max_words=150,
+            collocations=False,
+            prefer_horizontal=0.9
+        ).generate(text_data)
         st.markdown(f"**{lbl.capitalize()}** ({counts[lbl]} data)")
-        fig, ax = plt.subplots(figsize=(5, 3.5), dpi=160)
+        fig, ax = plt.subplots(figsize=(2.8, 1.8), dpi=180)
         ax.imshow(wc, interpolation="bilinear")
         ax.axis("off")
         plt.tight_layout()
         st.pyplot(fig, use_container_width=True)
 
-    # Preview
+    # Preview Data
     st.subheader("🔍 Contoh Hasil Pelabelan")
     st.dataframe(df[["stemmed_text", "sentiment_label", "confidence_score"]].head(20))
 
