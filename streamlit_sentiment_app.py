@@ -64,7 +64,7 @@ def main():
     # ---------------------------
     # 3) Upload file
     # ---------------------------
-    st.subheader("📂 Upload Dataset (.xlsx) — pastikan ada kolom 'stemmed_text' (atau 'clean_text')")
+    st.subheader("📂 Upload Dataset")
     uploaded = st.file_uploader("Unggah file Excel (.xlsx)", type=["xlsx"])
 
     if not uploaded:
