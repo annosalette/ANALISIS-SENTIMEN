@@ -114,8 +114,8 @@ def hybrid_sentiment(text):
 # -------------------------
 def main():
     st.set_page_config(page_title="Analisis Sentimen",layout="wide")
-    st.title("📊 Analisis Sentimen Pengguna Mobile Legends (Hybrid Naive Bayes)")
-    st.caption("Upload dataset mentah (.xlsx/.csv) → otomatis labeling, training, dan visualisasi ringkas")
+    st.title("📊 ANALISIS SENTIMEN PENGGUNA MOBILE LEGENDS DI TWITTER MENGGUNAKAN ALGORITMA NAÏVE BAYES")
+    st.caption("Upload dataset mentah (.xlsx/.csv) ")
 
     uploaded = st.file_uploader("Unggah file (.xlsx atau .csv)",type=["xlsx","csv"])
     if not uploaded: 
