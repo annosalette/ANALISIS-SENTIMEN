@@ -1,5 +1,5 @@
 # ===========================================
-# streamlit_sentiment_app.py (FINAL)
+# streamlit_sentiment_app.py (FINAL HD VISUAL)
 # ===========================================
 import streamlit as st
 import pandas as pd
@@ -37,7 +37,6 @@ def preprocess_text(text):
 POSITIF = set(["bagus","seru","keren","hebat","mantap","menang","gg","top","lancar","suka","jago","menarik","terbaik","asik","puas","oke","legend","unggul"])
 NEGATIF = set(["buruk","jelek","lag","noob","toxic","kalah","lemot","kecewa","marah","bete","down","ngehang","ngeframe","error","ampas","sampah","parah"])
 NETRAL = set(["hero","map","tim","build","match","battle","item","mode","skill","tank","mage","game","player","update","event","grafik"])
-
 NEGASI = set(["tidak", "bukan", "nggak", "ga", "gak", "tak", "belum"])
 MULTIWORD = {"tim beban": "negatif", "server jelek": "negatif", "lemot banget": "negatif", "bagus banget": "positif"}
 
@@ -112,7 +111,6 @@ def main():
         st.info("Silakan unggah dataset terlebih dahulu.")
         return
 
-    # Load dataset
     try:
         df = pd.read_excel(file) if file.name.endswith(".xlsx") else pd.read_csv(file)
     except Exception as e:
@@ -146,10 +144,10 @@ def main():
         st.write("Jumlah Data per Sentimen:")
         st.dataframe(counts.rename_axis("Label").reset_index().rename(columns={0: "Jumlah"}))
     with col2:
-        fig, ax = plt.subplots(figsize=(2.8, 2.8))
+        fig, ax = plt.subplots(figsize=(4, 4), dpi=150)
         ax.pie(counts, labels=counts.index, autopct="%1.1f%%", startangle=90,
-               colors=["#2ecc71", "#f1c40f", "#e74c3c"], textprops={"fontsize": 8})
-        st.pyplot(fig)
+               colors=["#2ecc71", "#f1c40f", "#e74c3c"], textprops={"fontsize": 10})
+        st.pyplot(fig, use_container_width=True)
 
     # Train/Test Naive Bayes
     X = df["stemmed_text"]
@@ -170,27 +168,31 @@ def main():
         st.write(f"**Akurasi:** {acc:.4f}")
         st.write(f"**F1-Score (weighted):** {f1:.4f}")
 
+        # 🔹 Confusion Matrix dengan resolusi tinggi
         cm = confusion_matrix(y_test, y_pred, labels=order)
-        fig_cm, ax_cm = plt.subplots(figsize=(3, 2.5))
+        fig_cm, ax_cm = plt.subplots(figsize=(5, 4), dpi=180)
         sns.heatmap(cm, annot=True, fmt="d", cmap="Blues",
-                    xticklabels=order, yticklabels=order, cbar=False, annot_kws={"size": 8})
-        ax_cm.set_xlabel("Prediksi", fontsize=8)
-        ax_cm.set_ylabel("Aktual", fontsize=8)
-        ax_cm.set_title("Confusion Matrix", fontsize=9)
-        st.pyplot(fig_cm)
+                    xticklabels=order, yticklabels=order, cbar=False, annot_kws={"size": 12})
+        ax_cm.set_xlabel("Prediksi", fontsize=11)
+        ax_cm.set_ylabel("Aktual", fontsize=11)
+        ax_cm.set_title("Confusion Matrix (High Definition)", fontsize=13, pad=12)
+        plt.tight_layout()
+        st.pyplot(fig_cm, use_container_width=True)
 
-    # WordCloud Kecil
+    # 🔹 WordCloud dengan ukuran besar & HD
     st.subheader("☁️ WordCloud Sentimen")
     for lbl, color in zip(order, ["Greens", "Purples", "Reds"]):
         text_data = " ".join(df[df["sentiment_label"] == lbl]["stemmed_text"])
         if not text_data.strip():
             continue
-        wc = WordCloud(width=250, height=200, background_color="white", colormap=color).generate(text_data)
-        st.markdown(f"**{lbl.capitalize()}** ({counts[lbl]} data)")
-        fig, ax = plt.subplots(figsize=(3, 2))
+        wc = WordCloud(width=800, height=500, background_color="white", colormap=color,
+                       max_words=200, collocations=False).generate(text_data)
+        st.markdown(f"### {lbl.capitalize()} ({counts[lbl]} data)")
+        fig, ax = plt.subplots(figsize=(7, 4.5), dpi=200)
         ax.imshow(wc, interpolation="bilinear")
         ax.axis("off")
-        st.pyplot(fig)
+        plt.tight_layout()
+        st.pyplot(fig, use_container_width=True)
 
     # Preview
     st.subheader("🔍 Contoh Hasil Pelabelan")
