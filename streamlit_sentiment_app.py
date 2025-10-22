@@ -1,5 +1,5 @@
 # ===========================================
-# streamlit_sentiment_app.py (FINAL HD VISUAL)
+# streamlit_sentiment_app.py 
 # ===========================================
 import streamlit as st
 import pandas as pd
@@ -13,9 +13,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics import (
-    accuracy_score, f1_score, classification_report, confusion_matrix
-)
+from sklearn.metrics import accuracy_score, f1_score, confusion_matrix
 from collections import Counter
 
 # -------------------------
@@ -144,9 +142,9 @@ def main():
         st.write("Jumlah Data per Sentimen:")
         st.dataframe(counts.rename_axis("Label").reset_index().rename(columns={0: "Jumlah"}))
     with col2:
-        fig, ax = plt.subplots(figsize=(4, 4), dpi=150)
+        fig, ax = plt.subplots(figsize=(3.5, 3.5), dpi=150)
         ax.pie(counts, labels=counts.index, autopct="%1.1f%%", startangle=90,
-               colors=["#2ecc71", "#f1c40f", "#e74c3c"], textprops={"fontsize": 10})
+               colors=["#2ecc71", "#5dade2", "#e74c3c"], textprops={"fontsize": 9})
         st.pyplot(fig, use_container_width=True)
 
     # Train/Test Naive Bayes
@@ -168,27 +166,33 @@ def main():
         st.write(f"**Akurasi:** {acc:.4f}")
         st.write(f"**F1-Score (weighted):** {f1:.4f}")
 
-        # 🔹 Confusion Matrix dengan resolusi tinggi
+        # 🔹 Confusion Matrix (compact HD)
         cm = confusion_matrix(y_test, y_pred, labels=order)
-        fig_cm, ax_cm = plt.subplots(figsize=(5, 4), dpi=180)
-        sns.heatmap(cm, annot=True, fmt="d", cmap="Blues",
-                    xticklabels=order, yticklabels=order, cbar=False, annot_kws={"size": 12})
-        ax_cm.set_xlabel("Prediksi", fontsize=11)
-        ax_cm.set_ylabel("Aktual", fontsize=11)
-        ax_cm.set_title("Confusion Matrix (High Definition)", fontsize=13, pad=12)
+        fig_cm, ax_cm = plt.subplots(figsize=(4, 3), dpi=160)
+        sns.heatmap(cm, annot=True, fmt="d", cmap="YlGnBu",
+                    xticklabels=order, yticklabels=order, cbar=False, annot_kws={"size": 10})
+        ax_cm.set_xlabel("Prediksi", fontsize=10)
+        ax_cm.set_ylabel("Aktual", fontsize=10)
+        ax_cm.set_title("Confusion Matrix", fontsize=11, pad=10)
         plt.tight_layout()
         st.pyplot(fig_cm, use_container_width=True)
 
-    # 🔹 WordCloud dengan ukuran besar & HD
-    st.subheader("☁️ WordCloud Sentimen")
-    for lbl, color in zip(order, ["Greens", "Purples", "Reds"]):
+    # 🔹 WordCloud compact + variasi warna
+    st.subheader("☁️ WordCloud Sentimen (Berwarna)")
+    color_maps = {
+        "positif": "Greens_r",
+        "netral": "Blues_r",
+        "negatif": "Reds_r"
+    }
+
+    for lbl in order:
         text_data = " ".join(df[df["sentiment_label"] == lbl]["stemmed_text"])
         if not text_data.strip():
             continue
-        wc = WordCloud(width=800, height=500, background_color="white", colormap=color,
-                       max_words=200, collocations=False).generate(text_data)
-        st.markdown(f"### {lbl.capitalize()} ({counts[lbl]} data)")
-        fig, ax = plt.subplots(figsize=(7, 4.5), dpi=200)
+        wc = WordCloud(width=600, height=350, background_color="white", colormap=color_maps[lbl],
+                       max_words=150, collocations=False).generate(text_data)
+        st.markdown(f"**{lbl.capitalize()}** ({counts[lbl]} data)")
+        fig, ax = plt.subplots(figsize=(5, 3.5), dpi=160)
         ax.imshow(wc, interpolation="bilinear")
         ax.axis("off")
         plt.tight_layout()
