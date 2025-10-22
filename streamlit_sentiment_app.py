@@ -119,8 +119,8 @@ def hybrid_sentiment(text):
 # Streamlit main function
 # -------------------------
 def main():
-    st.title("📊 Analisis Sentimen Pengguna Mobile Legends (Hybrid)")
-    st.write("Upload dataset mentah (.xlsx / .csv) — aplikasi akan otomatis preprocess + labeling + evaluasi.")
+    st.title("📊 Analisis Sentimen Pengguna Mobile Legends ")
+    st.write("Upload dataset mentah (.xlsx / .csv).")
 
     uploaded = st.file_uploader("Unggah file (.xlsx atau .csv)", type=["xlsx", "csv"])
     if uploaded is None:
