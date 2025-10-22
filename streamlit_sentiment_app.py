@@ -255,19 +255,5 @@ def main():
         ax_wc.axis("off")
         st.pyplot(fig_wc)
 
-    # ---------------------------
-    # 10) Download hasil
-    # ---------------------------
-    st.subheader("💾 Unduh Hasil")
-    result_cols = [text_col, "sentiment_label", "predicted_label"]
-    # if pipeline trained, include model details (not saving model file here)
-    st.download_button(
-        label="Download CSV hasil (text,label,predicted)",
-        data=df[result_cols].to_csv(index=False).encode("utf-8"),
-        file_name="hasil_sentimen_streamlit.csv",
-        mime="text/csv"
-    )
-
-
 if __name__ == "__main__":
     main()
