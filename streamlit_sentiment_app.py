@@ -22,9 +22,8 @@ from sklearn.metrics import (
 # ---------------------------
 def main():
     st.set_page_config(page_title="Analisis Sentimen (Naïve Bayes TF-IDF)", layout="wide")
-    st.title("📊 ANALISIS SENTIMEN PENGGUNA MOBILE LEGENDS DI TWITTER (NAÏVE BAYES + TF-IDF)")
+    st.title("📊ANALISIS SENTIMEN PENGGUNA MOBILE LEGENDS DI TWITTER MENGGUNAKAN ALGORITMA NAÏVE BAYES")
     st.write(
-        "Aplikasi ini mereplikasi pipeline dari notebook: TF-IDF (1-2 grams, min_df=3, max_df=0.85, sublinear_tf=True) "
         "→ MultinomialNB. Jika dataset belum berlabel, app menyediakan auto-labeling berbasis kamus kata."
     )
 
