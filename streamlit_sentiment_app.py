@@ -111,18 +111,15 @@ def main():
     st.pyplot(fig_cm)
 
     # ---------- WordCloud ----------
-    st.subheader("☁️ WordCloud per Sentimen (Mini Size)")
-    cmap = {"positif":"Greens","netral":"Purples","negatif":"Reds"}
-    for lbl in ["positif","netral","negatif"]:
-        teks = " ".join(df[df["sentiment_label"]==lbl]["stemmed_text"])
-        if not teks.strip():
-            continue
-        wc = WordCloud(width=250,height=200,background_color="white",colormap=cmap[lbl]).generate(teks)
-        st.markdown(f"**{lbl.capitalize()} (jumlah: {counts.get(lbl,0)})**")
-        fig_wc, ax_wc = plt.subplots(figsize=(2.5,2))
-        ax_wc.imshow(wc,interpolation="bilinear")
-        ax_wc.axis("off")
-        st.pyplot(fig_wc)
+    # Wordclouds (per predicted sentiment)
+st.subheader("WordCloud per Sentimen (Naïve Bayes)")
+for sent in df_labeled["predicted_sentiment_nb"].unique():
+    txt = " ".join(df_labeled[df_labeled["predicted_sentiment_nb"]==sent]["clean_text"].astype(str))
+    if txt.strip():
+        wc = WordCloud(width=600, height=300, background_color="white").generate(txt)
+        st.markdown(f"**{sent}**")
+        st.image(wc.to_array())
+
 
 if __name__=="__main__":
     main()
