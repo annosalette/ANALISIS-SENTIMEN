@@ -1,6 +1,5 @@
 # ===============================================================
-# 📊 ANALISIS SENTIMEN PENGGUNA MOBILE LEGENDS DI TWITTER
-#    MENGGUNAKAN ALGORITMA NAÏVE BAYES (TF-IDF)
+# 📊 ANALISIS SENTIMEN PENGGUNA MOBILE LEGENDS DI TWITTER MENGGUNAKAN ALGORITMA NAÏVE BAYES
 # ===============================================================
 
 import streamlit as st
@@ -66,7 +65,7 @@ def main():
     # ---------------------------------------------------------------
     # Upload Dataset
     # ---------------------------------------------------------------
-    st.subheader("📂 Upload Dataset (.xlsx) dengan Kolom 'stemmed_text' dan (opsional) 'sentiment_label'")
+    st.subheader("📂 Upload Dataset (.xlsx)")
     uploaded_file = st.file_uploader("Unggah dataset Anda:", type=["xlsx"])
 
     if uploaded_file:
@@ -138,7 +137,7 @@ def main():
         labels = sorted(y.unique())
         cm = confusion_matrix(y_test, y_pred, labels=labels)
 
-        fig_cm, ax_cm = plt.subplots(figsize=(7, 6))
+        fig_cm, ax_cm = plt.subplots(figsize=(5, 4))  # ukuran diperkecil
         sns.heatmap(cm, annot=True, fmt="d", cmap="Blues",
                     xticklabels=labels, yticklabels=labels, ax=ax_cm)
         ax_cm.set_xlabel("Prediksi")
@@ -154,9 +153,16 @@ def main():
         all_labels = ["positif", "netral", "negatif"]
         counts = counts.reindex(all_labels, fill_value=0)
 
+        # Bar Chart
         st.bar_chart(counts)
 
-        fig_pie, ax_pie = plt.subplots()
+        # Tambahkan jumlah total per kelas
+        st.write("**Jumlah Data per Sentimen:**")
+        for label, jumlah in counts.items():
+            st.write(f"- {label.capitalize()}: {jumlah} data")
+
+        # Pie Chart
+        fig_pie, ax_pie = plt.subplots(figsize=(4, 4))  # ukuran lebih kecil
         ax_pie.pie(
             counts,
             labels=counts.index,
@@ -165,7 +171,7 @@ def main():
             colors=["#2ecc71", "#f1c40f", "#e74c3c"]
         )
         ax_pie.axis("equal")
-        ax_pie.set_title("Distribusi Sentimen Komentar Mobile Legends")
+        ax_pie.set_title("Distribusi Sentimen Komentar")
         st.pyplot(fig_pie)
 
         # ---------------------------------------------------------------
@@ -176,10 +182,10 @@ def main():
         for sent in all_labels:
             text_data = " ".join(df[df["sentiment_label"] == sent]["stemmed_text"])
             if text_data.strip():
-                wc = WordCloud(width=800, height=400, colormap=colors[sent],
+                wc = WordCloud(width=500, height=250, colormap=colors[sent],
                                background_color="white").generate(text_data)
                 st.write(f"**Sentimen: {sent.capitalize()}**")
-                fig, ax = plt.subplots()
+                fig, ax = plt.subplots(figsize=(5, 3))
                 ax.imshow(wc, interpolation="bilinear")
                 ax.axis("off")
                 st.pyplot(fig)
