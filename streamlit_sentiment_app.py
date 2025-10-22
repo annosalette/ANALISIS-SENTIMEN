@@ -189,8 +189,8 @@ def main():
         text_data = " ".join(df[df["sentiment_label"] == lbl]["stemmed_text"])
         if not text_data.strip():
             continue
-        wc = WordCloud(width=600, height=350, background_color="white", colormap=color_maps[lbl],
-                       max_words=150, collocations=False).generate(text_data)
+        wc = WordCloud(width=60, height=35, background_color="white", colormap=color_maps[lbl],
+                       max_words=15, collocations=False).generate(text_data)
         st.markdown(f"**{lbl.capitalize()}** ({counts[lbl]} data)")
         fig, ax = plt.subplots(figsize=(5, 3.5), dpi=160)
         ax.imshow(wc, interpolation="bilinear")
