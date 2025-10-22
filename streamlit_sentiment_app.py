@@ -24,7 +24,7 @@ def main():
     st.set_page_config(page_title="Analisis Sentimen (Naïve Bayes TF-IDF)", layout="wide")
     st.title("📊ANALISIS SENTIMEN PENGGUNA MOBILE LEGENDS DI TWITTER MENGGUNAKAN ALGORITMA NAÏVE BAYES")
     st.write(
-        "→ MultinomialNB. Jika dataset belum berlabel, app menyediakan auto-labeling berbasis kamus kata."
+      
     )
 
     # ---------------------------
