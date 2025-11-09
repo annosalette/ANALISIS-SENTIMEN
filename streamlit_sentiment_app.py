@@ -176,19 +176,23 @@ def main():
         ax_cm.set_title("Confusion Matrix", fontsize=9, pad=6)
         plt.tight_layout()
         st.pyplot(fig_cm, use_container_width=True)
+# =========================================================
+# ✅ WordCloud Multiwarna (Menggunakan Palet Warna Pie Chart)
+# =========================================================
 
- # Hitung jumlah data per kategori sentimen
-counts = df["sentiment_label"].value_counts()
-
-# Urutan label sesuai indeks counts
-order = counts.index.tolist()
-
-# WordCloud Multiwarna
 st.subheader("☁️ WordCloud Sentimen (Multiwarna & Responsif)")
 
+# Hitung jumlah data per label sentimen
+counts = df["sentiment_label"].value_counts()
+
+# Urutan label berdasarkan data
+order = counts.index.tolist()
+
+# Palet warna sama seperti pie chart
 palette = ["#2ecc71", "#f1c40f", "#e74c3c"]
 
-def pie_palette_color_func(*args, **kwargs):
+def pie_palette_color_func(word=None, font_size=None, position=None,
+                           orientation=None, font_path=None, random_state=None):
     return random.choice(palette)
 
 for lbl in order:
@@ -197,19 +201,22 @@ for lbl in order:
         continue
 
     wc = WordCloud(
-        width=480, height=260,
+        width=480,
+        height=260,
         background_color="white",
-        color_func=pie_palette_color_func,
+        color_func=pie_palette_color_func,   # Ganti warna sesuai palet
         max_words=150,
         collocations=False,
         prefer_horizontal=0.9
     ).generate(text_data)
 
     st.markdown(f"**{lbl.capitalize()}** ({counts[lbl]} data)")
+
     fig, ax = plt.subplots(figsize=(2.8, 1.8), dpi=180)
     ax.imshow(wc, interpolation="bilinear")
     ax.axis("off")
     plt.tight_layout()
+
     st.pyplot(fig, use_container_width=True)
 
 
