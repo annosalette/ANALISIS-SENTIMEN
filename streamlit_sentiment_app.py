@@ -177,25 +177,26 @@ def main():
         plt.tight_layout()
         st.pyplot(fig_cm, use_container_width=True)
 
-  # WordCloud Multiwarna
+    # Tentukan urutan label
+order = counts.index.tolist()  # otomatis sesuai data
+
+# WordCloud Multiwarna
 st.subheader("☁️ WordCloud Sentimen (Multiwarna & Responsif)")
 
-# Palet warna yang sama dengan pie chart
 palette = ["#2ecc71", "#f1c40f", "#e74c3c"]
 
-def pie_palette_color_func(word=None, font_size=None, position=None,
-                           orientation=None, font_path=None, random_state=None):
-    """Pewarnaan kata berdasarkan palet warna pie chart"""
+def pie_palette_color_func(*args, **kwargs):
     return random.choice(palette)
 
 for lbl in order:
     text_data = " ".join(df[df["sentiment_label"] == lbl]["stemmed_text"])
     if not text_data.strip():
         continue
+
     wc = WordCloud(
         width=480, height=260,
         background_color="white",
-        color_func=pie_palette_color_func,  # Warna disesuaikan
+        color_func=pie_palette_color_func,
         max_words=150,
         collocations=False,
         prefer_horizontal=0.9
