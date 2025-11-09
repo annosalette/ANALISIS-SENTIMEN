@@ -209,6 +209,7 @@ for lbl in order:
     st.pyplot(fig, use_container_width=True)
 
 
+
     # Preview Data
     st.subheader("🔍 Contoh Hasil Pelabelan")
     st.dataframe(df[["stemmed_text", "sentiment_label", "confidence_score"]].head(20))
