@@ -177,41 +177,43 @@ def main():
         plt.tight_layout()
         st.pyplot(fig_cm, use_container_width=True)
         
- # ===============================================================
-# 8️⃣ Wordcloud per Sentimen (Menggunakan Palet Pie Chart)
-# ===============================================================
-st.subheader("☁️ Wordcloud per Sentimen")
+    # ===============================================================
+    # 8️⃣ Wordcloud per Sentimen (Menggunakan Palet Pie Chart)
+    # ===============================================================
+    st.subheader("☁️ Wordcloud per Sentimen")
 
-# Warna untuk tiap sentimen
-palette = {
-    "positif": ["#2ecc71"],   # Hijau
-    "netral": ["#f1c40f"],    # Kuning
-    "negatif": ["#e74c3c"]    # Merah
-}
+    # Gunakan urutan label yang sudah ada
+    all_labels = order  
 
-def sentiment_color_func(sent):
-    def color_func(word=None, font_size=None, position=None,
-                   orientation=None, font_path=None, random_state=None):
-        return random.choice(palette[sent])
-    return color_func
+    # Warna untuk tiap sentimen (sama seperti pie chart)
+    palette = {
+        "positif": ["#2ecc71"],   # Hijau
+        "netral": ["#f1c40f"],    # Kuning
+        "negatif": ["#e74c3c"]    # Merah
+    }
 
-for sent in all_labels:
-    text_data = " ".join(df[df["sentiment_label"] == sent]["stemmed_text"])
-    if text_data.strip():
-        wc = WordCloud(
-            width=800,
-            height=400,
-            background_color="white",
-            color_func=sentiment_color_func(sent),
-            max_words=150,
-            collocations=False
-        ).generate(text_data)
+    def sentiment_color_func(sent):
+        def color_func(*args, **kwargs):
+            return random.choice(palette[sent])
+        return color_func
 
-        st.write(f"**Sentimen: {sent.capitalize()}**")
-        fig, ax = plt.subplots()
-        ax.imshow(wc, interpolation="bilinear")
-        ax.axis("off")
-        st.pyplot(fig)
+    for sent in all_labels:
+        text_data = " ".join(df[df["sentiment_label"] == sent]["stemmed_text"])
+        if text_data.strip():
+            wc = WordCloud(
+                width=800,
+                height=400,
+                background_color="white",
+                max_words=150,
+                collocations=False,
+                color_func=sentiment_color_func(sent)
+            ).generate(text_data)
+
+            st.write(f"**Sentimen: {sent.capitalize()}**")
+            fig, ax = plt.subplots()
+            ax.imshow(wc, interpolation="bilinear")
+            ax.axis("off")
+            st.pyplot(fig)
 
 
 
