@@ -182,12 +182,6 @@ def main():
 
 st.subheader("☁️ WordCloud Sentimen (Multiwarna & Responsif)")
 
-# Hitung jumlah data per label sentimen
-counts = df["sentiment_label"].value_counts()
-
-# Urutan label berdasarkan data
-order = counts.index.tolist()
-
 # Palet warna sama seperti pie chart
 palette = ["#2ecc71", "#f1c40f", "#e74c3c"]
 
