@@ -176,43 +176,22 @@ def main():
         ax_cm.set_title("Confusion Matrix", fontsize=9, pad=6)
         plt.tight_layout()
         st.pyplot(fig_cm, use_container_width=True)
-# =========================================================
-# ✅ WordCloud Multiwarna (Menggunakan Palet Warna Pie Chart)
-# =========================================================
-
-st.subheader("☁️ WordCloud Sentimen (Multiwarna & Responsif)")
-
-# Palet warna sama seperti pie chart
-palette = ["#2ecc71", "#f1c40f", "#e74c3c"]
-
-def pie_palette_color_func(word=None, font_size=None, position=None,
-                           orientation=None, font_path=None, random_state=None):
-    return random.choice(palette)
-
-for lbl in order:
-    text_data = " ".join(df[df["sentiment_label"] == lbl]["stemmed_text"])
-    if not text_data.strip():
-        continue
-
-    wc = WordCloud(
-        width=480,
-        height=260,
-        background_color="white",
-        color_func=pie_palette_color_func,   # Ganti warna sesuai palet
-        max_words=150,
-        collocations=False,
-        prefer_horizontal=0.9
-    ).generate(text_data)
-
-    st.markdown(f"**{lbl.capitalize()}** ({counts[lbl]} data)")
-
-    fig, ax = plt.subplots(figsize=(2.8, 1.8), dpi=180)
-    ax.imshow(wc, interpolation="bilinear")
-    ax.axis("off")
-    plt.tight_layout()
-
-    st.pyplot(fig, use_container_width=True)
-
+        
+  # ===============================================================
+    # 8️⃣ Wordcloud per Sentimen
+    # ===============================================================
+    st.subheader("☁️ Wordcloud per Sentimen")
+    colors = {"positif": "Greens", "negatif": "Reds", "netral": "Blues"}
+    for sent in all_labels:
+        text_data = " ".join(df[df["sentiment_label"] == sent]["stemmed_text"])
+        if text_data.strip():
+            wc = WordCloud(width=800, height=400, colormap=colors[sent],
+                           background_color="white").generate(text_data)
+            st.write(f"**Sentimen: {sent.capitalize()}**")
+            fig, ax = plt.subplots()
+            ax.imshow(wc, interpolation="bilinear")
+            ax.axis("off")
+            st.pyplot(fig)
 
 
 
