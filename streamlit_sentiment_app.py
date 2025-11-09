@@ -177,8 +177,11 @@ def main():
         plt.tight_layout()
         st.pyplot(fig_cm, use_container_width=True)
 
-    # Tentukan urutan label
-order = counts.index.tolist()  # otomatis sesuai data
+ # Hitung jumlah data per kategori sentimen
+counts = df["sentiment_label"].value_counts()
+
+# Urutan label sesuai indeks counts
+order = counts.index.tolist()
 
 # WordCloud Multiwarna
 st.subheader("☁️ WordCloud Sentimen (Multiwarna & Responsif)")
@@ -208,6 +211,7 @@ for lbl in order:
     ax.axis("off")
     plt.tight_layout()
     st.pyplot(fig, use_container_width=True)
+
 
 
 
