@@ -177,34 +177,37 @@ def main():
         plt.tight_layout()
         st.pyplot(fig_cm, use_container_width=True)
 
-    # WordCloud Multiwarna
-    st.subheader("☁️ WordCloud Sentimen (Multiwarna & Responsif)")
+  # WordCloud Multiwarna
+st.subheader("☁️ WordCloud Sentimen (Multiwarna & Responsif)")
 
-    def random_color_func(word=None, font_size=None, position=None, orientation=None, font_path=None, random_state=None):
-        """Fungsi pewarnaan acak agar tiap kata punya warna berbeda"""
-        h = int(360.0 * random.random())
-        s = int(60 + 40 * random.random())
-        l = int(40 + 10 * random.random())
-        return f"hsl({h}, {s}%, {l}%)"
+# Palet warna yang sama dengan pie chart
+palette = ["#2ecc71", "#f1c40f", "#e74c3c"]
 
-    for lbl in order:
-        text_data = " ".join(df[df["sentiment_label"] == lbl]["stemmed_text"])
-        if not text_data.strip():
-            continue
-        wc = WordCloud(
-            width=480, height=260,
-            background_color="white",
-            color_func=random_color_func,
-            max_words=150,
-            collocations=False,
-            prefer_horizontal=0.9
-        ).generate(text_data)
-        st.markdown(f"**{lbl.capitalize()}** ({counts[lbl]} data)")
-        fig, ax = plt.subplots(figsize=(2.8, 1.8), dpi=180)
-        ax.imshow(wc, interpolation="bilinear")
-        ax.axis("off")
-        plt.tight_layout()
-        st.pyplot(fig, use_container_width=True)
+def pie_palette_color_func(word=None, font_size=None, position=None,
+                           orientation=None, font_path=None, random_state=None):
+    """Pewarnaan kata berdasarkan palet warna pie chart"""
+    return random.choice(palette)
+
+for lbl in order:
+    text_data = " ".join(df[df["sentiment_label"] == lbl]["stemmed_text"])
+    if not text_data.strip():
+        continue
+    wc = WordCloud(
+        width=480, height=260,
+        background_color="white",
+        color_func=pie_palette_color_func,  # Warna disesuaikan
+        max_words=150,
+        collocations=False,
+        prefer_horizontal=0.9
+    ).generate(text_data)
+
+    st.markdown(f"**{lbl.capitalize()}** ({counts[lbl]} data)")
+    fig, ax = plt.subplots(figsize=(2.8, 1.8), dpi=180)
+    ax.imshow(wc, interpolation="bilinear")
+    ax.axis("off")
+    plt.tight_layout()
+    st.pyplot(fig, use_container_width=True)
+
 
     # Preview Data
     st.subheader("🔍 Contoh Hasil Pelabelan")
