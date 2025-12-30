@@ -103,7 +103,7 @@ def hybrid_sentiment(text):
 # -------------------------
 def main():
     st.title("📊 Analisis Sentimen Pengguna Mobile Legends")
-    st.write("Upload dataset mentah (Excel/CSV) untuk dilabeli otomatis menggunakan metode **Hybrid Lexicon + Naïve Bayes**.")
+    st.write("Upload dataset mentah (Excel/CSV) untuk dilabeli otomatis menggunakan metode Naïve Bayes.")
 
     file = st.file_uploader("Unggah file dataset (.xlsx / .csv)", type=["xlsx", "csv"])
     if file is None:
