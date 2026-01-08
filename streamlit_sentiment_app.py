@@ -148,23 +148,23 @@ def main():
         st.pyplot(fig, use_container_width=True)
 
    # ===============================================================
-# Model Naïve Bayes (VERSI SEIMBANG)
-# ===============================================================
+    # Model Naïve Bayes (VERSI SEIMBANG)
+    # ===============================================================
 
-X = df["stemmed_text"]
-y = df["sentiment_label"]
+    X = df["stemmed_text"]
+    y = df["sentiment_label"]
 
-order = ["positif", "netral", "negatif"]
+    order = ["positif", "netral", "negatif"]
 
-if len(y.unique()) > 1:
-    X_train, X_test, y_train, y_test = train_test_split(
+    if len(y.unique()) > 1:
+        X_train, X_test, y_train, y_test = train_test_split(
         X, y,
         stratify=y,
         test_size=0.2,
         random_state=42
-    )
+        )
 
-    model = Pipeline([
+        model = Pipeline([
         ("tfidf", TfidfVectorizer(
             lowercase=True,
             ngram_range=(1, 2),
@@ -175,22 +175,22 @@ if len(y.unique()) > 1:
         ("nb", MultinomialNB(
             class_prior=[1/3, 1/3, 1/3]
         ))
-    ])
+        ])
+    
+        model.fit(X_train, y_train)
+        y_pred = model.predict(X_test)
+    
+        acc = accuracy_score(y_test, y_pred)
+        f1 = f1_score(y_test, y_pred, average="weighted")
 
-    model.fit(X_train, y_train)
-    y_pred = model.predict(X_test)
+        st.subheader("📊 Evaluasi Model Naïve Bayes (Seimbang)")
+        st.write(f"**Akurasi Model :** {acc:.4f}")
+        st.write(f"**F1-Score :** {f1:.4f}")
 
-    acc = accuracy_score(y_test, y_pred)
-    f1 = f1_score(y_test, y_pred, average="weighted")
+        cm = confusion_matrix(y_test, y_pred, labels=order)
+        fig_cm, ax_cm = plt.subplots(figsize=(2.6, 2.0), dpi=180)
 
-    st.subheader("📊 Evaluasi Model Naïve Bayes (Seimbang)")
-    st.write(f"**Akurasi Model :** {acc:.4f}")
-    st.write(f"**F1-Score :** {f1:.4f}")
-
-    cm = confusion_matrix(y_test, y_pred, labels=order)
-    fig_cm, ax_cm = plt.subplots(figsize=(2.6, 2.0), dpi=180)
-
-    sns.heatmap(
+        sns.heatmap(
         cm,
         annot=True,
         fmt="d",
@@ -199,13 +199,13 @@ if len(y.unique()) > 1:
         yticklabels=order,
         cbar=False,
         annot_kws={"size": 8}
-    )
+        )
 
-    ax_cm.set_xlabel("Prediksi", fontsize=8)
-    ax_cm.set_ylabel("Aktual", fontsize=8)
-    ax_cm.set_title("Confusion Matrix (Seimbang)", fontsize=9, pad=6)
-    plt.tight_layout()
-    st.pyplot(fig_cm, use_container_width=True)
+        ax_cm.set_xlabel("Prediksi", fontsize=8)
+        ax_cm.set_ylabel("Aktual", fontsize=8)
+        ax_cm.set_title("Confusion Matrix (Seimbang)", fontsize=9, pad=6)
+        plt.tight_layout()
+        st.pyplot(fig_cm, use_container_width=True)
 
         
     # ===============================================================
