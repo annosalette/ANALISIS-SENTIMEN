@@ -147,35 +147,66 @@ def main():
                colors=["#2ecc71", "#5dade2", "#e74c3c"], textprops={"fontsize": 8})
         st.pyplot(fig, use_container_width=True)
 
-    # Model Naïve Bayes
-    X = df["stemmed_text"]
-    y = df["sentiment_label"]
-    if len(y.unique()) > 1:
-        X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y, test_size=0.2, random_state=42)
-        model = Pipeline([
-            ("tfidf", TfidfVectorizer(ngram_range=(1, 2), min_df=3, max_df=0.85)),
-            ("nb", MultinomialNB())
-        ])
-        model.fit(X_train, y_train)
-        y_pred = model.predict(X_test)
+   # ===============================================================
+# Model Naïve Bayes (VERSI SEIMBANG)
+# ===============================================================
 
-        acc = accuracy_score(y_test, y_pred)
-        f1 = f1_score(y_test, y_pred, average="weighted")
+X = df["stemmed_text"]
+y = df["sentiment_label"]
 
-        st.subheader("📊 Evaluasi Model Naïve Bayes")
-        st.write(f"**Akurasi Model :** {acc:.4f}")
-        st.write(f"**F1-Score :** {f1:.4f}")
+order = ["positif", "netral", "negatif"]
 
-        # Confusion Matrix (compact + responsif)
-        cm = confusion_matrix(y_test, y_pred, labels=order)
-        fig_cm, ax_cm = plt.subplots(figsize=(2.6, 2.0), dpi=180)
-        sns.heatmap(cm, annot=True, fmt="d", cmap="YlGnBu",
-                    xticklabels=order, yticklabels=order, cbar=False, annot_kws={"size": 8})
-        ax_cm.set_xlabel("Prediksi", fontsize=8)
-        ax_cm.set_ylabel("Aktual", fontsize=8)
-        ax_cm.set_title("Confusion Matrix", fontsize=9, pad=6)
-        plt.tight_layout()
-        st.pyplot(fig_cm, use_container_width=True)
+if len(y.unique()) > 1:
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y,
+        stratify=y,
+        test_size=0.2,
+        random_state=42
+    )
+
+    model = Pipeline([
+        ("tfidf", TfidfVectorizer(
+            lowercase=True,
+            ngram_range=(1, 2),
+            min_df=3,
+            max_df=0.85,
+            sublinear_tf=True
+        )),
+        ("nb", MultinomialNB(
+            class_prior=[1/3, 1/3, 1/3]
+        ))
+    ])
+
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+
+    acc = accuracy_score(y_test, y_pred)
+    f1 = f1_score(y_test, y_pred, average="weighted")
+
+    st.subheader("📊 Evaluasi Model Naïve Bayes (Seimbang)")
+    st.write(f"**Akurasi Model :** {acc:.4f}")
+    st.write(f"**F1-Score :** {f1:.4f}")
+
+    cm = confusion_matrix(y_test, y_pred, labels=order)
+    fig_cm, ax_cm = plt.subplots(figsize=(2.6, 2.0), dpi=180)
+
+    sns.heatmap(
+        cm,
+        annot=True,
+        fmt="d",
+        cmap="YlGnBu",
+        xticklabels=order,
+        yticklabels=order,
+        cbar=False,
+        annot_kws={"size": 8}
+    )
+
+    ax_cm.set_xlabel("Prediksi", fontsize=8)
+    ax_cm.set_ylabel("Aktual", fontsize=8)
+    ax_cm.set_title("Confusion Matrix (Seimbang)", fontsize=9, pad=6)
+    plt.tight_layout()
+    st.pyplot(fig_cm, use_container_width=True)
+
         
     # ===============================================================
     # 8️⃣ Wordcloud per Sentimen (Menggunakan Palet Pie Chart)
