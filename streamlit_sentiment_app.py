@@ -63,40 +63,49 @@ def hybrid_sentiment(text):
 
     txt = preprocess_text(text)
     words = txt.split()
-    mw = detect_multiword(txt)
-    labels = []
 
+    # ===== PRIORITAS MUTLAK MULTIWORD =====
+    mw = detect_multiword(txt)
+    if mw:
+        return {"label": mw, "score": 0.85}
+
+    score_map = {"positif": 0, "negatif": 0, "netral": 0}
+
+    # ===== LEXICON SCORING (NETRAL DILEMAHKAN) =====
     for i, w in enumerate(words):
         label = get_lexicon_label(w)
+
         if i > 0 and words[i - 1] in NEGASI:
             if label == "positif": label = "negatif"
             elif label == "negatif": label = "positif"
-        labels.append(label)
 
-    if mw:
-        labels.append(mw)
+        if label == "positif":
+            score_map["positif"] += 2
+        elif label == "negatif":
+            score_map["negatif"] += 2
+        else:
+            score_map["netral"] += 0.5
 
-    counts = Counter(labels)
-    lex_label = max(counts, key=counts.get)
-    lex_conf = counts[lex_label] / sum(counts.values())
-
+    # ===== TEXTBLOB (LEBIH SENSITIF) =====
     blob = TextBlob(text)
     polarity = blob.sentiment.polarity
-    if polarity > 0.05:
-        blob_label = "positif"
-    elif polarity < -0.05:
-        blob_label = "negatif"
-    else:
-        blob_label = "netral"
-    blob_conf = abs(polarity)
 
-    if lex_label == blob_label:
-        final_label = lex_label
-        conf = (lex_conf + blob_conf) / 2
+    if polarity > 0.03:
+        score_map["positif"] += abs(polarity) * 3
+    elif polarity < -0.03:
+        score_map["negatif"] += abs(polarity) * 3
     else:
-        final_label = blob_label if blob_conf > 0.25 else lex_label
-        conf = max(lex_conf, blob_conf)
-    return {"label": final_label, "score": round(conf, 3)}
+        score_map["netral"] += 0.5
+
+    # ===== FINAL DECISION =====
+    final_label = max(score_map, key=score_map.get)
+    total = sum(score_map.values())
+    confidence = score_map[final_label] / total if total > 0 else 0
+
+    return {
+        "label": final_label,
+        "score": round(confidence, 3)
+    }
 
 # -------------------------
 # Streamlit Main App
