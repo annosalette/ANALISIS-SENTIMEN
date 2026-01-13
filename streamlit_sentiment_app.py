@@ -1,6 +1,7 @@
 # ===========================================
-# streamlit_sentiment_app.py (HD Compact Visual + Multiwarna)
+# streamlit_sentiment_app.py
 # ===========================================
+
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -14,7 +15,6 @@ from sklearn.pipeline import Pipeline
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import accuracy_score, f1_score, confusion_matrix
-from collections import Counter
 import random
 
 # -------------------------
@@ -31,13 +31,28 @@ def preprocess_text(text):
     return s
 
 # -------------------------
-# Lexicon + Negation
+# Lexicon & Negation
 # -------------------------
-POSITIF = set(["bagus","seru","keren","hebat","mantap","menang","gg","top","lancar","suka","jago","menarik","terbaik","asik","puas","oke","legend","unggul"])
-NEGATIF = set(["buruk","jelek","lag","noob","toxic","kalah","lemot","kecewa","marah","bete","down","ngehang","ngeframe","error","ampas","sampah","parah"])
-NETRAL = set(["hero","map","tim","build","match","battle","item","mode","skill","tank","mage","game","player","update","event","grafik"])
-NEGASI = set(["tidak", "bukan", "nggak", "ga", "gak", "tak", "belum"])
-MULTIWORD = {"tim beban": "negatif", "server jelek": "negatif", "lemot banget": "negatif", "bagus banget": "positif"}
+POSITIF = {
+    "bagus","seru","keren","hebat","mantap","menang","gg","top",
+    "lancar","suka","jago","menarik","terbaik","asik","puas","oke"
+}
+NEGATIF = {
+    "buruk","jelek","lag","noob","toxic","kalah","lemot","kecewa",
+    "marah","bete","ngehang","error","ampas","parah"
+}
+NETRAL = {
+    "hero","map","tim","build","match","item","mode","skill",
+    "game","player","update","event"
+}
+NEGASI = {"tidak", "bukan", "nggak", "ga", "gak", "tak", "belum"}
+
+MULTIWORD = {
+    "tim beban": "negatif",
+    "server jelek": "negatif",
+    "lemot banget": "negatif",
+    "bagus banget": "positif"
+}
 
 def detect_multiword(text):
     for phrase, label in MULTIWORD.items():
@@ -55,7 +70,7 @@ def get_lexicon_label(word):
     return "netral"
 
 # -------------------------
-# Hybrid Sentiment Function
+# Hybrid Sentiment Labeling
 # -------------------------
 def hybrid_sentiment(text):
     if not isinstance(text, str) or not text.strip():
@@ -64,202 +79,144 @@ def hybrid_sentiment(text):
     txt = preprocess_text(text)
     words = txt.split()
 
-    # ===== PRIORITAS MUTLAK MULTIWORD =====
     mw = detect_multiword(txt)
     if mw:
         return {"label": mw, "score": 0.85}
 
-    score_map = {"positif": 0, "negatif": 0, "netral": 0}
+    score = {"positif": 0, "negatif": 0, "netral": 0}
 
-    # ===== LEXICON SCORING (NETRAL DILEMAHKAN) =====
     for i, w in enumerate(words):
         label = get_lexicon_label(w)
 
         if i > 0 and words[i - 1] in NEGASI:
-            if label == "positif": label = "negatif"
-            elif label == "negatif": label = "positif"
+            if label == "positif":
+                label = "negatif"
+            elif label == "negatif":
+                label = "positif"
 
         if label == "positif":
-            score_map["positif"] += 2
+            score["positif"] += 2
         elif label == "negatif":
-            score_map["negatif"] += 2
+            score["negatif"] += 2
         else:
-            score_map["netral"] += 0.5
+            score["netral"] += 0.5
 
-    # ===== TEXTBLOB (LEBIH SENSITIF) =====
-    blob = TextBlob(text)
-    polarity = blob.sentiment.polarity
-
+    polarity = TextBlob(text).sentiment.polarity
     if polarity > 0.03:
-        score_map["positif"] += abs(polarity) * 3
+        score["positif"] += abs(polarity) * 3
     elif polarity < -0.03:
-        score_map["negatif"] += abs(polarity) * 3
+        score["negatif"] += abs(polarity) * 3
     else:
-        score_map["netral"] += 0.5
+        score["netral"] += 0.5
 
-    # ===== FINAL DECISION =====
-    final_label = max(score_map, key=score_map.get)
-    total = sum(score_map.values())
-    confidence = score_map[final_label] / total if total > 0 else 0
+    final_label = max(score, key=score.get)
+    total = sum(score.values())
+    confidence = score[final_label] / total if total else 0
 
-    return {
-        "label": final_label,
-        "score": round(confidence, 3)
-    }
+    return {"label": final_label, "score": round(confidence, 3)}
 
 # -------------------------
-# Streamlit Main App
+# Streamlit App
 # -------------------------
 def main():
     st.title("📊 Analisis Sentimen Pengguna Mobile Legends")
-    st.write("Upload dataset mentah (Excel/CSV) untuk dilabeli otomatis menggunakan metode Naïve Bayes.")
 
-    file = st.file_uploader("Unggah file dataset (.xlsx / .csv)", type=["xlsx", "csv"])
+    file = st.file_uploader(
+        "Unggah dataset (.xlsx / .csv)",
+        type=["xlsx", "csv"]
+    )
+
     if file is None:
         st.info("Silakan unggah dataset terlebih dahulu.")
         return
 
-    try:
-        df = pd.read_excel(file) if file.name.endswith(".xlsx") else pd.read_csv(file)
-    except Exception as e:
-        st.error(f"Gagal membaca file: {e}")
-        return
-
+    df = pd.read_excel(file) if file.name.endswith(".xlsx") else pd.read_csv(file)
     df.columns = df.columns.str.strip().str.lower()
-    text_col = next((c for c in ["stemmed_text", "clean_text", "text", "komentar", "tweet"] if c in df.columns), None)
+
+    # ✅ FIX UTAMA DI SINI
+    text_col = next(
+        (c for c in [
+            "full_text", "stemmed_text", "clean_text",
+            "text", "komentar", "tweet"
+        ] if c in df.columns),
+        None
+    )
+
     if text_col is None:
-        st.error("Kolom teks tidak ditemukan. Pastikan ada kolom seperti 'stemmed_text' atau 'text'.")
+        st.error("Kolom teks tidak ditemukan (contoh: full_text).")
         return
 
-    st.success(f"Dataset berhasil dimuat ✅ — Total {len(df)} data")
-    st.dataframe(df[[text_col]].head(5))
+    st.success(f"Dataset dimuat — {len(df)} data")
+    st.dataframe(df[[text_col]].head())
 
-    # Labeling otomatis
-    st.info("Melabeli data... mohon tunggu sebentar.")
+    # Labeling
     df["stemmed_text"] = df[text_col].astype(str).apply(preprocess_text)
     result = df["stemmed_text"].apply(hybrid_sentiment)
     df["sentiment_label"] = result.apply(lambda x: x["label"])
     df["confidence_score"] = result.apply(lambda x: x["score"])
 
-    # Distribusi Sentimen
+    # Distribusi
     st.subheader("📈 Distribusi Sentimen")
     order = ["positif", "netral", "negatif"]
     counts = df["sentiment_label"].value_counts().reindex(order, fill_value=0)
 
-    col1, col2 = st.columns([1, 1.2])
-    with col1:
-        st.write("Jumlah Data per Sentimen:")
-        st.dataframe(counts.rename_axis("Label").reset_index().rename(columns={0: "Jumlah"}))
-    with col2:
-        fig, ax = plt.subplots(figsize=(3, 3), dpi=180)
-        ax.pie(counts, labels=counts.index, autopct="%1.1f%%", startangle=90,
-               colors=["#2ecc71", "#5dade2", "#e74c3c"], textprops={"fontsize": 8})
-        st.pyplot(fig, use_container_width=True)
+    fig, ax = plt.subplots(figsize=(3, 3), dpi=160)
+    ax.pie(
+        counts,
+        labels=counts.index,
+        autopct="%1.1f%%",
+        startangle=90,
+        colors=["#2ecc71", "#f1c40f", "#e74c3c"]
+    )
+    st.pyplot(fig)
 
-   # ===============================================================
-    # Model Naïve Bayes (VERSI SEIMBANG)
-    # ===============================================================
-
+    # Model Naive Bayes
     X = df["stemmed_text"]
     y = df["sentiment_label"]
 
-    order = ["positif", "netral", "negatif"]
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, stratify=y, test_size=0.2, random_state=42
+    )
 
-    if len(y.unique()) > 1:
-        X_train, X_test, y_train, y_test = train_test_split(
-        X, y,
-        stratify=y,
-        test_size=0.2,
-        random_state=42
-        )
-
-        model = Pipeline([
+    model = Pipeline([
         ("tfidf", TfidfVectorizer(
-            lowercase=True,
             ngram_range=(1, 2),
             min_df=3,
             max_df=0.85,
             sublinear_tf=True
         )),
-        ("nb", MultinomialNB(
-            class_prior=[1/3, 1/3, 1/3]
-        ))
-        ])
-    
-        model.fit(X_train, y_train)
-        y_pred = model.predict(X_test)
-    
-        acc = accuracy_score(y_test, y_pred)
-        f1 = f1_score(y_test, y_pred, average="weighted")
+        ("nb", MultinomialNB(class_prior=[1/3, 1/3, 1/3]))
+    ])
 
-        st.subheader("📊 Evaluasi Model Naïve Bayes (Seimbang)")
-        st.write(f"**Akurasi Model :** {acc:.4f}")
-        st.write(f"**F1-Score :** {f1:.4f}")
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
 
-        cm = confusion_matrix(y_test, y_pred, labels=order)
-        fig_cm, ax_cm = plt.subplots(figsize=(2.6, 2.0), dpi=180)
+    st.subheader("📊 Evaluasi Model")
+    st.write("Akurasi:", accuracy_score(y_test, y_pred))
+    st.write("F1-score:", f1_score(y_test, y_pred, average="weighted"))
 
-        sns.heatmap(
-        cm,
-        annot=True,
-        fmt="d",
-        cmap="YlGnBu",
-        xticklabels=order,
-        yticklabels=order,
-        cbar=False,
-        annot_kws={"size": 8}
-        )
-
-        ax_cm.set_xlabel("Prediksi", fontsize=8)
-        ax_cm.set_ylabel("Aktual", fontsize=8)
-        ax_cm.set_title("Confusion Matrix (Seimbang)", fontsize=9, pad=6)
-        plt.tight_layout()
-        st.pyplot(fig_cm, use_container_width=True)
-
-        
-    # ===============================================================
-    # 8️⃣ Wordcloud per Sentimen (Menggunakan Palet Pie Chart)
-    # ===============================================================
-    st.subheader("☁️ Wordcloud per Sentimen")
-
-    # Gunakan urutan label yang sudah ada
-    all_labels = order  
-
-    # Warna untuk tiap sentimen (sama seperti pie chart)
+    # Wordcloud
+    st.subheader("☁️ Wordcloud")
     palette = {
-        "positif": ["#2ecc71"],   # Hijau
-        "netral": ["#f1c40f"],    # Kuning
-        "negatif": ["#e74c3c"]    # Merah
+        "positif": ["#2ecc71"],
+        "netral": ["#f1c40f"],
+        "negatif": ["#e74c3c"]
     }
 
-    def sentiment_color_func(sent):
-        def color_func(*args, **kwargs):
-            return random.choice(palette[sent])
-        return color_func
-
-    for sent in all_labels:
+    for sent in order:
         text_data = " ".join(df[df["sentiment_label"] == sent]["stemmed_text"])
-        if text_data.strip():
+        if text_data:
             wc = WordCloud(
-                width=800,
-                height=400,
                 background_color="white",
-                max_words=150,
-                collocations=False,
-                color_func=sentiment_color_func(sent)
+                color_func=lambda *args, **kwargs: random.choice(palette[sent])
             ).generate(text_data)
 
-            st.write(f"**Sentimen: {sent.capitalize()}**")
-            fig, ax = plt.subplots()
-            ax.imshow(wc, interpolation="bilinear")
-            ax.axis("off")
-            st.pyplot(fig)
+            st.write(sent.capitalize())
+            st.image(wc.to_array())
 
+    st.subheader("🔍 Contoh Data")
+    st.dataframe(df[["stemmed_text", "sentiment_label", "confidence_score"]].head(15))
 
-
-    # Preview Data
-    st.subheader("🔍 Contoh Hasil Pelabelan")
-    st.dataframe(df[["stemmed_text", "sentiment_label", "confidence_score"]].head(20))
 
 if __name__ == "__main__":
     main()
