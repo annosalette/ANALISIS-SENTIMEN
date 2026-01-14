@@ -1,12 +1,13 @@
 # =========================================================
-# 📊 VISUALISASI & EVALUASI MODEL SENTIMEN
-# Metode: TF-IDF + Multinomial Naïve Bayes
+# 📊 VISUALISASI ANALISIS SENTIMEN MOBILE LEGENDS
 # =========================================================
 
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+from wordcloud import WordCloud
 
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
@@ -19,53 +20,58 @@ from sklearn.metrics import (
     f1_score
 )
 
+# =========================================================
+# MAIN FUNCTION (AMAN UNTUK app.py)
+# =========================================================
 def main():
+
     # =========================================================
-    # 🎯 JUDUL HALAMAN
+    # ⚙️ KONFIGURASI HALAMAN
     # =========================================================
-    st.title("📊 Visualisasi & Evaluasi Model Sentimen")
-    st.markdown("Metode **TF-IDF + Naïve Bayes** (Dataset Penelitian Skripsi)")
+    st.set_page_config(
+        page_title="Analisis Sentimen Mobile Legends",
+        page_icon="🎮",
+        layout="wide"
+    )
+
+    st.title("🎮 Visualisasi Analisis Sentimen Mobile Legends")
+    st.markdown("Visualisasi dan evaluasi model **TF-IDF + Naïve Bayes**")
 
     # =========================================================
     # 📂 UPLOAD DATASET
     # =========================================================
     uploaded_file = st.file_uploader(
-        "📂 Upload dataset hasil pelabelan sentimen (.xlsx)",
+        "📂 Upload dataset hasil pelabelan (.xlsx)",
         type=["xlsx"]
     )
 
     if uploaded_file is None:
-        st.info("Silakan upload dataset berlabel terlebih dahulu.")
+        st.info("Silakan upload dataset terlebih dahulu.")
         return
 
-    # Membaca dataset
     df = pd.read_excel(uploaded_file)
-
-    # Normalisasi nama kolom
     df.columns = df.columns.str.strip().str.lower()
 
     # =========================================================
-    # 🔍 AUTO-DETEKSI KOLOM TEKS & LABEL
+    # 🔍 AUTO-DETEKSI KOLOM
     # =========================================================
-    text_candidates = ["stemmed_text", "clean_text", "full_text", "text"]
-    label_candidates = ["sentiment_label", "sentiment", "label"]
+    text_candidates = ["stemmed_text", "clean_text", "full_text", "text", "comment"]
+    label_candidates = ["sentiment_label", "sentiment", "label", "sentimen", "kelas"]
 
     text_col = next((c for c in text_candidates if c in df.columns), None)
     label_col = next((c for c in label_candidates if c in df.columns), None)
 
-    # Validasi kolom
     if text_col is None or label_col is None:
-        st.error("❌ Kolom teks atau label sentimen tidak ditemukan.")
-        st.write("Kolom yang tersedia:", df.columns.tolist())
+        st.error("❌ Kolom teks atau label tidak ditemukan.")
+        st.write("Kolom tersedia:", df.columns.tolist())
         return
 
-    # Samakan nama kolom agar konsisten
+    # Normalisasi nama kolom
     df = df.rename(columns={
         text_col: "stemmed_text",
         label_col: "sentiment_label"
     })
 
-    # Hapus data kosong
     df = df.dropna(subset=["stemmed_text", "sentiment_label"])
 
     # =========================================================
@@ -76,8 +82,8 @@ def main():
     col1, col2 = st.columns(2)
 
     with col1:
-        st.write(f"**Total Data:** {len(df)}")
-        st.write("**Distribusi Label Sentimen:**")
+        st.write("Jumlah data:", len(df))
+        st.write("Distribusi Sentimen:")
         st.dataframe(df["sentiment_label"].value_counts())
 
     with col2:
@@ -93,7 +99,41 @@ def main():
         st.pyplot(fig)
 
     # =========================================================
-    # 🔀 SPLIT DATA TRAINING & TESTING
+    # ☁️ WORDCLOUD PER SENTIMEN
+    # =========================================================
+    st.subheader("☁️ WordCloud Berdasarkan Sentimen")
+
+    sentiments = sorted(df["sentiment_label"].unique())
+    cols = st.columns(len(sentiments))
+
+    for col, sentiment in zip(cols, sentiments):
+        with col:
+            st.markdown(f"**Sentimen: {sentiment}**")
+
+            text_data = " ".join(
+                df[df["sentiment_label"] == sentiment]["stemmed_text"]
+                .astype(str)
+                .values
+            )
+
+            if text_data.strip() == "":
+                st.info("Tidak ada teks.")
+            else:
+                wc = WordCloud(
+                    width=600,
+                    height=400,
+                    background_color="white",
+                    max_words=120,
+                    collocations=False
+                ).generate(text_data)
+
+                fig_wc, ax_wc = plt.subplots()
+                ax_wc.imshow(wc, interpolation="bilinear")
+                ax_wc.axis("off")
+                st.pyplot(fig_wc)
+
+    # =========================================================
+    # 🔀 SPLIT DATA
     # =========================================================
     X = df["stemmed_text"].astype(str)
     y = df["sentiment_label"]
@@ -121,7 +161,7 @@ def main():
     ])
 
     # =========================================================
-    # 🧠 TRAINING MODEL
+    # 🧠 TRAIN MODEL
     # =========================================================
     with st.spinner("🔄 Melatih model Naïve Bayes..."):
         pipeline.fit(X_train, y_train)
@@ -131,19 +171,16 @@ def main():
     # =========================================================
     y_pred = pipeline.predict(X_test)
 
-    st.subheader("📈 Hasil Evaluasi Model")
+    st.subheader("📈 Evaluasi Model")
 
     col3, col4 = st.columns(2)
 
     with col3:
         st.metric("Akurasi", round(accuracy_score(y_test, y_pred), 4))
-        st.metric(
-            "F1-Score (Weighted)",
-            round(f1_score(y_test, y_pred, average="weighted"), 4)
-        )
+        st.metric("F1-Score (Weighted)", round(f1_score(y_test, y_pred, average="weighted"), 4))
 
     with col4:
-        st.text("Classification Report")
+        st.text("Laporan Klasifikasi")
         st.text(classification_report(y_test, y_pred))
 
     # =========================================================
@@ -167,12 +204,18 @@ def main():
 
     ax_cm.set_xlabel("Prediksi")
     ax_cm.set_ylabel("Aktual")
-    ax_cm.set_title("Confusion Matrix - TF-IDF + Naïve Bayes")
+    ax_cm.set_title("Confusion Matrix - Naïve Bayes (TF-IDF)")
     st.pyplot(fig_cm)
+
+    # =========================================================
+    # FOOTER
+    # =========================================================
+    st.markdown("---")
+    st.markdown("📌 **Menu Visualisasi | TF-IDF + Naïve Bayes | Skripsi**")
 
 
 # =========================================================
-# 🚀 EKSEKUSI
+# ENTRY POINT
 # =========================================================
 if __name__ == "__main__":
     main()
