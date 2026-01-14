@@ -1,6 +1,7 @@
-# ============================
-# visualisasi.py
-# ============================
+# =========================================================
+# 📊 VISUALISASI & EVALUASI MODEL SENTIMEN
+# Metode: TF-IDF + Multinomial Naïve Bayes
+# =========================================================
 
 import streamlit as st
 import pandas as pd
@@ -18,14 +19,16 @@ from sklearn.metrics import (
     f1_score
 )
 
-def show_visualization():
-
+def main():
+    # =========================================================
+    # 🎯 JUDUL HALAMAN
+    # =========================================================
     st.title("📊 Visualisasi & Evaluasi Model Sentimen")
-    st.markdown("Metode **TF-IDF + Naïve Bayes** (Dataset Penelitian)")
+    st.markdown("Metode **TF-IDF + Naïve Bayes** (Dataset Penelitian Skripsi)")
 
-    # =========================
-    # Upload Dataset
-    # =========================
+    # =========================================================
+    # 📂 UPLOAD DATASET
+    # =========================================================
     uploaded_file = st.file_uploader(
         "📂 Upload dataset hasil pelabelan sentimen (.xlsx)",
         type=["xlsx"]
@@ -35,40 +38,46 @@ def show_visualization():
         st.info("Silakan upload dataset berlabel terlebih dahulu.")
         return
 
+    # Membaca dataset
     df = pd.read_excel(uploaded_file)
+
+    # Normalisasi nama kolom
     df.columns = df.columns.str.strip().str.lower()
 
-    # =========================
-    # Auto-detect kolom
-    # =========================
+    # =========================================================
+    # 🔍 AUTO-DETEKSI KOLOM TEKS & LABEL
+    # =========================================================
     text_candidates = ["stemmed_text", "clean_text", "full_text", "text"]
     label_candidates = ["sentiment_label", "sentiment", "label"]
 
     text_col = next((c for c in text_candidates if c in df.columns), None)
     label_col = next((c for c in label_candidates if c in df.columns), None)
 
+    # Validasi kolom
     if text_col is None or label_col is None:
-        st.error("❌ Dataset harus memiliki kolom teks dan label sentimen.")
-        st.write("Kolom tersedia:", df.columns.tolist())
+        st.error("❌ Kolom teks atau label sentimen tidak ditemukan.")
+        st.write("Kolom yang tersedia:", df.columns.tolist())
         return
 
+    # Samakan nama kolom agar konsisten
     df = df.rename(columns={
         text_col: "stemmed_text",
         label_col: "sentiment_label"
     })
 
+    # Hapus data kosong
     df = df.dropna(subset=["stemmed_text", "sentiment_label"])
 
-    # =========================
-    # Informasi Dataset
-    # =========================
+    # =========================================================
+    # 📊 INFORMASI DATASET
+    # =========================================================
     st.subheader("📌 Informasi Dataset")
 
     col1, col2 = st.columns(2)
 
     with col1:
         st.write(f"**Total Data:** {len(df)}")
-        st.write("**Distribusi Label:**")
+        st.write("**Distribusi Label Sentimen:**")
         st.dataframe(df["sentiment_label"].value_counts())
 
     with col2:
@@ -83,9 +92,9 @@ def show_visualization():
         ax.set_title("Distribusi Sentimen")
         st.pyplot(fig)
 
-    # =========================
-    # Split Data
-    # =========================
+    # =========================================================
+    # 🔀 SPLIT DATA TRAINING & TESTING
+    # =========================================================
     X = df["stemmed_text"].astype(str)
     y = df["sentiment_label"]
 
@@ -97,9 +106,9 @@ def show_visualization():
         stratify=y
     )
 
-    # =========================
-    # Pipeline TF-IDF + NB
-    # =========================
+    # =========================================================
+    # ⚙️ PIPELINE TF-IDF + NAÏVE BAYES
+    # =========================================================
     pipeline = Pipeline([
         ("tfidf", TfidfVectorizer(
             lowercase=True,
@@ -108,34 +117,38 @@ def show_visualization():
             max_df=0.85,
             sublinear_tf=True
         )),
-        ("nb", MultinomialNB())
+        ("classifier", MultinomialNB())
     ])
 
+    # =========================================================
+    # 🧠 TRAINING MODEL
+    # =========================================================
     with st.spinner("🔄 Melatih model Naïve Bayes..."):
         pipeline.fit(X_train, y_train)
 
-    # =========================
-    # Evaluasi Model
-    # =========================
+    # =========================================================
+    # 📈 EVALUASI MODEL
+    # =========================================================
     y_pred = pipeline.predict(X_test)
 
-    st.subheader("📈 Evaluasi Model")
+    st.subheader("📈 Hasil Evaluasi Model")
 
     col3, col4 = st.columns(2)
 
     with col3:
         st.metric("Akurasi", round(accuracy_score(y_test, y_pred), 4))
-        st.metric("F1-Score (Weighted)", round(
-            f1_score(y_test, y_pred, average="weighted"), 4
-        ))
+        st.metric(
+            "F1-Score (Weighted)",
+            round(f1_score(y_test, y_pred, average="weighted"), 4)
+        )
 
     with col4:
         st.text("Classification Report")
         st.text(classification_report(y_test, y_pred))
 
-    # =========================
-    # Confusion Matrix
-    # =========================
+    # =========================================================
+    # 📊 CONFUSION MATRIX
+    # =========================================================
     st.subheader("📊 Confusion Matrix")
 
     labels = sorted(y.unique())
@@ -154,5 +167,12 @@ def show_visualization():
 
     ax_cm.set_xlabel("Prediksi")
     ax_cm.set_ylabel("Aktual")
-    ax_cm.set_title("Confusion Matrix - Naïve Bayes (TF-IDF)")
+    ax_cm.set_title("Confusion Matrix - TF-IDF + Naïve Bayes")
     st.pyplot(fig_cm)
+
+
+# =========================================================
+# 🚀 EKSEKUSI
+# =========================================================
+if __name__ == "__main__":
+    main()
