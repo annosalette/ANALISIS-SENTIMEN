@@ -25,9 +25,6 @@ from sklearn.metrics import (
 # =========================================================
 def main():
 
-    # =========================================================
-    # ⚙️ KONFIGURASI HALAMAN
-    # =========================================================
     st.set_page_config(
         page_title="Analisis Sentimen Mobile Legends",
         page_icon="🎮",
@@ -66,29 +63,32 @@ def main():
         st.write("Kolom tersedia:", df.columns.tolist())
         return
 
-    # Normalisasi nama kolom
     df = df.rename(columns={
         text_col: "stemmed_text",
         label_col: "sentiment_label"
     })
 
-    df = df.dropna(subset=["stemmed_text", "sentiment_label"])
+    # =========================================================
+    # 🧠 PISAHKAN DATA
+    # =========================================================
+    df_raw = df.copy()  # untuk visualisasi (SEMUA DATA)
+    df_model = df.dropna(subset=["stemmed_text", "sentiment_label"])  # untuk model
 
     # =========================================================
-    # 📊 INFORMASI DATASET
+    # 📊 INFORMASI DATASET (PAKAI DATA ASLI)
     # =========================================================
     st.subheader("📌 Informasi Dataset")
 
     col1, col2 = st.columns(2)
 
     with col1:
-        st.write("Jumlah data:", len(df))
+        st.write("Jumlah data:", len(df_raw))
         st.write("Distribusi Sentimen:")
-        st.dataframe(df["sentiment_label"].value_counts())
+        st.dataframe(df_raw["sentiment_label"].value_counts())
 
     with col2:
         fig, ax = plt.subplots()
-        df["sentiment_label"].value_counts().plot(
+        df_raw["sentiment_label"].value_counts().plot(
             kind="pie",
             autopct="%1.1f%%",
             startangle=140,
@@ -99,11 +99,11 @@ def main():
         st.pyplot(fig)
 
     # =========================================================
-    # ☁️ WORDCLOUD PER SENTIMEN
+    # ☁️ WORDCLOUD PER SENTIMEN (DATA ASLI)
     # =========================================================
     st.subheader("☁️ WordCloud Berdasarkan Sentimen")
 
-    sentiments = sorted(df["sentiment_label"].unique())
+    sentiments = sorted(df_raw["sentiment_label"].dropna().unique())
     cols = st.columns(len(sentiments))
 
     for col, sentiment in zip(cols, sentiments):
@@ -111,7 +111,8 @@ def main():
             st.markdown(f"**Sentimen: {sentiment}**")
 
             text_data = " ".join(
-                df[df["sentiment_label"] == sentiment]["stemmed_text"]
+                df_raw[df_raw["sentiment_label"] == sentiment]["stemmed_text"]
+                .dropna()
                 .astype(str)
                 .values
             )
@@ -133,10 +134,10 @@ def main():
                 st.pyplot(fig_wc)
 
     # =========================================================
-    # 🔀 SPLIT DATA
+    # 🔀 SPLIT DATA (KHUSUS MODEL)
     # =========================================================
-    X = df["stemmed_text"].astype(str)
-    y = df["sentiment_label"]
+    X = df_model["stemmed_text"].astype(str)
+    y = df_model["sentiment_label"]
 
     X_train, X_test, y_train, y_test = train_test_split(
         X,
@@ -160,9 +161,6 @@ def main():
         ("classifier", MultinomialNB())
     ])
 
-    # =========================================================
-    # 🧠 TRAIN MODEL
-    # =========================================================
     with st.spinner("🔄 Melatih model Naïve Bayes..."):
         pipeline.fit(X_train, y_train)
 
@@ -207,15 +205,9 @@ def main():
     ax_cm.set_title("Confusion Matrix - Naïve Bayes (TF-IDF)")
     st.pyplot(fig_cm)
 
-    # =========================================================
-    # FOOTER
-    # =========================================================
     st.markdown("---")
-    st.markdown("📌 **Menu Visualisasi | TF-IDF + Naïve Bayes | Skripsi**")
+    st.markdown("📌 **Visualisasi & Evaluasi | TF-IDF + Naïve Bayes | Skripsi**")
 
 
-# =========================================================
-# ENTRY POINT
-# =========================================================
 if __name__ == "__main__":
     main()
