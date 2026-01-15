@@ -38,7 +38,7 @@ def main():
     )
 
     st.title("🎮 Visualisasi Analisis Sentimen Mobile Legends")
-    st.markdown("Evaluasi model **TF-IDF + Naïve Bayes** (Sinkron dengan Google Colab)")
+    st.markdown("Evaluasi model **Naïve Bayes** ")
 
     # -----------------------------------------------------
     # DOWNLOAD STOPWORDS
