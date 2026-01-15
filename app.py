@@ -49,7 +49,7 @@ if menu == "🏠 Beranda":
         - **🔍 Prediksi Komentar:**  
           Untuk memprediksi sentimen (positif, netral, negatif) dari komentar pengguna secara otomatis.  
         - **📈 Analisis Sentimen:**  
-          Untuk melakukan analisis lebih mendalam, visualisasi hasil, dan evaluasi model Machine Learning.
+          Untuk melakukan analisis, visualisasi hasil, dan evaluasi model.
         """
     )
 
