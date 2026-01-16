@@ -59,7 +59,7 @@ def main():
                 st.subheader("📊 Hasil Prediksi")
                 st.write(f"**Komentar:** {user_text}")
                 st.write(f"**Sentimen:** {label}")
-                st.write(f"**Confidence:** {score * 100:.2f}%")
+              
 
                 # Pesan sesuai sentimen
                 if label == "Positif":
