@@ -38,7 +38,7 @@ def main():
     )
 
     st.title("🎮 Visualisasi Analisis Sentimen Mobile Legends")
-    st.markdown("Evaluasi model **TF-IDF + Naïve Bayes**")
+    st.markdown("Evaluasi model Naïve Bayes")
 
     # -----------------------------------------------------
     # STOPWORDS
@@ -127,25 +127,6 @@ def main():
     ax_bar.set_ylabel("Jumlah Data")
     ax_bar.set_title("Distribusi Sentimen")
     st.pyplot(fig_bar)
-
-    # -----------------------------------------------------
-    # DONUT CHART
-    # -----------------------------------------------------
-    st.subheader("🍩 Distribusi Sentimen (Donut Chart)")
-
-    fig_donut, ax_donut = plt.subplots(figsize=(5, 5))
-    ax_donut.pie(
-        sentiment_counts,
-        labels=[
-            f"{sentiment_emoji.get(lbl, '')} {lbl}"
-            for lbl in sentiment_counts.index
-        ],
-        autopct="%1.1f%%",
-        startangle=140,
-        wedgeprops=dict(width=0.4)
-    )
-    ax_donut.set_title("Persentase Sentimen")
-    st.pyplot(fig_donut)
 
     # -----------------------------------------------------
     # WORDCLOUD PER SENTIMEN
