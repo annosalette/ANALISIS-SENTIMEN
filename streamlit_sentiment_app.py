@@ -1,6 +1,6 @@
 # =========================================================
 # 📊 VISUALISASI ANALISIS SENTIMEN MOBILE LEGENDS
-#     TF-IDF + NAÏVE BAYES (FINAL VERSION)
+#     TF-IDF + NAÏVE BAYES (FINAL + ENHANCED)
 # =========================================================
 
 import streamlit as st
@@ -24,7 +24,7 @@ from sklearn.metrics import (
 )
 
 # =========================================================
-# MAIN FUNCTION (AMAN UNTUK app.py)
+# MAIN FUNCTION
 # =========================================================
 def main():
 
@@ -38,13 +38,22 @@ def main():
     )
 
     st.title("🎮 Visualisasi Analisis Sentimen Mobile Legends")
-    st.markdown("Evaluasi model **Naïve Bayes** ")
+    st.markdown("Evaluasi model **TF-IDF + Naïve Bayes**")
 
     # -----------------------------------------------------
-    # DOWNLOAD STOPWORDS
+    # STOPWORDS
     # -----------------------------------------------------
-    nltk.download('stopwords')
-    stop_words = stopwords.words('indonesian')
+    nltk.download("stopwords")
+    stop_words = stopwords.words("indonesian")
+
+    # -----------------------------------------------------
+    # EMOJI SENTIMEN
+    # -----------------------------------------------------
+    sentiment_emoji = {
+        "positif": "😊",
+        "negatif": "😡",
+        "netral": "😐"
+    }
 
     # -----------------------------------------------------
     # UPLOAD DATASET
@@ -64,8 +73,8 @@ def main():
     # -----------------------------------------------------
     # AUTO DETEKSI KOLOM
     # -----------------------------------------------------
-    text_candidates = ["stemmed_text", "clean_text", "full_text", "text", "comment"]
-    label_candidates = ["sentiment_label", "sentiment", "label", "sentimen", "kelas"]
+    text_candidates = ["stemmed_text", "clean_text", "text", "comment"]
+    label_candidates = ["sentiment_label", "sentiment", "label", "sentimen"]
 
     text_col = next((c for c in text_candidates if c in df.columns), None)
     label_col = next((c for c in label_candidates if c in df.columns), None)
@@ -80,35 +89,63 @@ def main():
         label_col: "sentiment_label"
     })
 
-    # -----------------------------------------------------
-    # PISAH DATA
-    # -----------------------------------------------------
-    df_raw = df.copy()  # untuk visualisasi
-    df_model = df.dropna(subset=["stemmed_text", "sentiment_label"])  # untuk model
+    df_raw = df.copy()
+    df_model = df.dropna(subset=["stemmed_text", "sentiment_label"])
 
     # -----------------------------------------------------
-    # INFORMASI DATASET
+    # INFORMASI & DISTRIBUSI SENTIMEN
     # -----------------------------------------------------
-    st.subheader("📌 Informasi Dataset")
+    st.subheader("📌 Informasi & Distribusi Sentimen")
 
-    col1, col2 = st.columns(2)
+    sentiment_counts = df_raw["sentiment_label"].value_counts()
+    sentiment_percent = sentiment_counts / sentiment_counts.sum() * 100
 
-    with col1:
-        st.write("Jumlah Data:", len(df_raw))
-        st.write("Distribusi Sentimen:")
-        st.dataframe(df_raw["sentiment_label"].value_counts())
-
-    with col2:
-        fig, ax = plt.subplots()
-        df_raw["sentiment_label"].value_counts().plot(
-            kind="pie",
-            autopct="%1.1f%%",
-            startangle=140,
-            ax=ax
+    cols = st.columns(len(sentiment_counts))
+    for col, (label, count) in zip(cols, sentiment_counts.items()):
+        emoji = sentiment_emoji.get(label, "📊")
+        col.metric(
+            label=f"{emoji} {label.capitalize()}",
+            value=count,
+            delta=f"{sentiment_percent[label]:.1f}%"
         )
-        ax.set_ylabel("")
-        ax.set_title("Distribusi Sentimen")
-        st.pyplot(fig)
+
+    st.markdown("---")
+
+    # -----------------------------------------------------
+    # BAR CHART DISTRIBUSI
+    # -----------------------------------------------------
+    st.subheader("📊 Distribusi Sentimen (Bar Chart)")
+
+    fig_bar, ax_bar = plt.subplots(figsize=(6, 4))
+    sns.barplot(
+        x=sentiment_counts.index,
+        y=sentiment_counts.values,
+        palette="Set2",
+        ax=ax_bar
+    )
+    ax_bar.set_xlabel("Sentimen")
+    ax_bar.set_ylabel("Jumlah Data")
+    ax_bar.set_title("Distribusi Sentimen")
+    st.pyplot(fig_bar)
+
+    # -----------------------------------------------------
+    # DONUT CHART
+    # -----------------------------------------------------
+    st.subheader("🍩 Distribusi Sentimen (Donut Chart)")
+
+    fig_donut, ax_donut = plt.subplots(figsize=(5, 5))
+    ax_donut.pie(
+        sentiment_counts,
+        labels=[
+            f"{sentiment_emoji.get(lbl, '')} {lbl}"
+            for lbl in sentiment_counts.index
+        ],
+        autopct="%1.1f%%",
+        startangle=140,
+        wedgeprops=dict(width=0.4)
+    )
+    ax_donut.set_title("Persentase Sentimen")
+    st.pyplot(fig_donut)
 
     # -----------------------------------------------------
     # WORDCLOUD PER SENTIMEN
@@ -116,11 +153,12 @@ def main():
     st.subheader("☁️ WordCloud Berdasarkan Sentimen")
 
     sentiments = sorted(df_raw["sentiment_label"].dropna().unique())
-    cols = st.columns(len(sentiments))
+    cols_wc = st.columns(len(sentiments))
 
-    for col, sentiment in zip(cols, sentiments):
+    for col, sentiment in zip(cols_wc, sentiments):
         with col:
-            st.markdown(f"**Sentimen: {sentiment}**")
+            emoji = sentiment_emoji.get(sentiment, "")
+            st.markdown(f"**{emoji} {sentiment.capitalize()}**")
 
             text_data = " ".join(
                 df_raw[df_raw["sentiment_label"] == sentiment]["stemmed_text"]
@@ -133,8 +171,8 @@ def main():
                 st.info("Tidak ada teks.")
             else:
                 wc = WordCloud(
-                    width=600,
-                    height=400,
+                    width=500,
+                    height=300,
                     background_color="white",
                     max_words=120,
                     collocations=False
@@ -162,7 +200,7 @@ def main():
     st.write("Urutan Label:", labels)
 
     # -----------------------------------------------------
-    # PIPELINE TF-IDF + NAÏVE BAYES (IDENTIK DENGAN COLAB)
+    # PIPELINE TF-IDF + NAÏVE BAYES
     # -----------------------------------------------------
     pipeline = Pipeline([
         ("tfidf", TfidfVectorizer(
@@ -175,7 +213,7 @@ def main():
             max_features=5000
         )),
         ("classifier", MultinomialNB(
-            class_prior=[0.3, 0.4, 0.3]  # negatif, netral, positif
+            class_prior=[0.3, 0.4, 0.3]
         ))
     ])
 
@@ -189,24 +227,26 @@ def main():
 
     st.subheader("📈 Evaluasi Model")
 
-    col3, col4 = st.columns(2)
+    col1, col2 = st.columns(2)
 
-    with col3:
+    with col1:
         st.metric("Akurasi", round(accuracy_score(y_test, y_pred), 4))
-        st.metric("F1-Score (Weighted)", round(f1_score(y_test, y_pred, average="weighted"), 4))
+        st.metric("F1-Score (Weighted)", round(
+            f1_score(y_test, y_pred, average="weighted"), 4)
+        )
 
-    with col4:
+    with col2:
         st.text("Classification Report")
         st.text(classification_report(y_test, y_pred))
 
     # -----------------------------------------------------
-    # CONFUSION MATRIX
+    # CONFUSION MATRIX (LEBIH KECIL)
     # -----------------------------------------------------
     st.subheader("📊 Confusion Matrix")
 
     cm = confusion_matrix(y_test, y_pred, labels=labels)
 
-    fig_cm, ax_cm = plt.subplots(figsize=(6, 5))
+    fig_cm, ax_cm = plt.subplots(figsize=(4.5, 4))
     sns.heatmap(
         cm,
         annot=True,
@@ -214,12 +254,13 @@ def main():
         cmap="Blues",
         xticklabels=labels,
         yticklabels=labels,
+        cbar=False,
+        annot_kws={"size": 10},
         ax=ax_cm
     )
-
     ax_cm.set_xlabel("Prediksi")
     ax_cm.set_ylabel("Aktual")
-    ax_cm.set_title("Confusion Matrix - Naïve Bayes (TF-IDF)")
+    ax_cm.set_title("Confusion Matrix - Naïve Bayes")
     st.pyplot(fig_cm)
 
     # -----------------------------------------------------
