@@ -248,7 +248,7 @@ def main():
     # FOOTER
     # -----------------------------------------------------
     st.markdown("---")
-    st.markdown("📌 ** Naïve Bayes| Skripsi**")
+    st.markdown("📌  Naïve Bayes| Skripsi")
 
 
 # =========================================================
