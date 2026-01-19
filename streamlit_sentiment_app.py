@@ -248,7 +248,7 @@ def main():
     # FOOTER
     # -----------------------------------------------------
     st.markdown("---")
-    st.markdown("📌 **TF-IDF + Naïve Bayes | Sinkron Colab | Skripsi**")
+    st.markdown("📌 ** Naïve Bayes| Skripsi**")
 
 
 # =========================================================
